@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'name_eingeben_screen.dart';
-import '../storage/list_storage.dart';
 
 class EinkaufslisteStartScreen extends StatefulWidget {
   const EinkaufslisteStartScreen({super.key});
@@ -19,7 +18,7 @@ class _EinkaufslisteStartScreenState extends State<EinkaufslisteStartScreen> {
   }
 
   Future<void> _laden() async {
-    final daten = await ListStorage.getListen();
+    final daten = null; // Hier sollte der Code zum Laden der Daten stehen
     setState(() {
       _listen = daten;
     });

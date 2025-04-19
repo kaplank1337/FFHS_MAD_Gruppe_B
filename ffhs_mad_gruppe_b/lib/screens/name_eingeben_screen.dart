@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../storage/list_storage.dart';
 
 class NameEingebenScreen extends StatefulWidget {
   const NameEingebenScreen({super.key});
@@ -14,7 +13,7 @@ class _NameEingebenScreenState extends State<NameEingebenScreen> {
   void _speichernUndZurueck() async {
     final name = _controller.text.trim();
     if (name.isNotEmpty) {
-      await ListStorage.speichern(name);
+      //SAVE HERE
       if (!context.mounted) return;
       Navigator.pop(context, true); // zurück zur Startseite
     }
