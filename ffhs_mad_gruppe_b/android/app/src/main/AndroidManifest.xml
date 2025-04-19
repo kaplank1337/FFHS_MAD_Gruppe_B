@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    package="com.example.ffhs_mad_gruppe_b"
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="ffhs_mad_gruppe_b"
         android:name="${applicationName}"

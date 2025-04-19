@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "935015268965",
+    "project_id": "mad-gruppe-b-einkaufsliste",
+    "storage_bucket": "mad-gruppe-b-einkaufsliste.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:935015268965:android:6b62a770a176d51a93bc8c",
+        "android_client_info": {
+          "package_name": "com.example.ffhs_mad_gruppe_b"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKjkbO7heYY74t4vOkZicyLxCAqukIkcw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
