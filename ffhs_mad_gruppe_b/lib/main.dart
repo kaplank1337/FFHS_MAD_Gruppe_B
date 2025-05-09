@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-import 'screens/start_screen.dart';
+import 'package:ffhs_mad_gruppe_b/screens/einkaufsliste_screen.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+import 'screens/login_screen.dart';
+import 'package:flutter/material.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -15,7 +13,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const EinkaufslisteStartScreen(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/home': (context) => const EinkaufslisteScreen(name: 'Home'),
+      },
     );
   }
 }
