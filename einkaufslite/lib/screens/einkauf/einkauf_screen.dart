@@ -201,46 +201,70 @@ class _EinkaufScreenState extends State<EinkaufScreen> {
   }
 
   void _showShareDialog() {
-    final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Einkaufsliste teilen'),
-            content: TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'E-Mail-Adresse des Empfängers',
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Abbrechen'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  final email = _emailController.text.trim();
-                  if (email.isNotEmpty) {
-                    try {
-                      await FirebaseFirestore.instance
-                          .collection('shoppinglist')
-                          .doc(widget.uid)
-                          .update({
-                            'sharedwith': FieldValue.arrayUnion([email]),
-                          });
-                      Navigator.of(context).pop();
-                    } catch (e) {
-                      print('Fehler beim Teilen: $e');
-                    }
-                  }
-                },
-                child: const Text('Teilen'),
-              ),
-            ],
-          ),
-    );
-  }
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Einkaufsliste teilen'),
+      content: TextField(
+        controller: _emailController,
+        decoration: const InputDecoration(
+          labelText: 'E-Mail-Adresse des Empfängers',
+        ),
+        keyboardType: TextInputType.emailAddress,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Abbrechen'),
+        ),
+        TextButton(
+          onPressed: () async {
+            final email = _emailController.text.trim();
+            if (email.isNotEmpty) {
+              try {
+                // Prüfe, ob die E-Mail-Adresse in der Datenbank existiert
+                final querySnapshot = await FirebaseFirestore.instance
+                    .collection('users')
+                    .where('email', isEqualTo: email)
+                    .get();
+
+                if (querySnapshot.docs.isNotEmpty) {
+                  // E-Mail existiert, füge sie zur Einkaufsliste hinzu
+                  await FirebaseFirestore.instance
+                      .collection('shoppinglist')
+                      .doc(widget.uid)
+                      .update({
+                    'sharedwith': FieldValue.arrayUnion([email]),
+                  });
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Einkaufsliste erfolgreich geteilt!'),
+                    ),
+                  );
+                } else {
+                  // E-Mail existiert nicht
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('E-Mail-Adresse nicht gefunden!'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                print('Fehler beim Teilen: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Fehler beim Teilen der Einkaufsliste.'),
+                  ),
+                );
+              }
+            }
+          },
+          child: const Text('Teilen'),
+        ),
+      ],
+    ),
+  );}
 }
