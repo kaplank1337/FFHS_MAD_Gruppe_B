@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:einkaufslite/models/shoppinglist.dart';
 import 'package:einkaufslite/models/user.dart';
 import 'package:einkaufslite/services/database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +37,9 @@ class _HomeState extends State<Home> {
 
   Widget _buildSaleList() {
     return StreamBuilder<QuerySnapshot<Shoppinglist>>(
-      stream: _databaseServices.saleStream(),
+      stream: _databaseServices.saleStream(
+        FirebaseAuth.instance.currentUser!.uid,
+      ),
       builder: (
         BuildContext context,
         AsyncSnapshot<QuerySnapshot<Shoppinglist>> snapshot,
