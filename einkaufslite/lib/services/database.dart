@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:einkaufslite/models/article.dart';
 import 'package:einkaufslite/models/shoppinglist.dart';
+import 'package:rxdart/rxdart.dart';
+
 
 class DatabaseService {
   // user uid von authentication
@@ -39,16 +41,45 @@ class DatabaseService {
   }
   */
 
-  Stream<QuerySnapshot<Shoppinglist>> saleStream() {
-    return FirebaseFirestore.instance
-        .collection('shoppinglist')
-        .where('sharedwith', arrayContains: uid)
-        .withConverter<Shoppinglist>(
-          fromFirestore: Shoppinglist.fromFirestore,
-          toFirestore: (Shoppinglist s, _) => s.toFirestore(),
-        )
-        .snapshots();
-  }
+  Stream<QuerySnapshot<Shoppinglist>> saleStream(String uid) {
+  // Die Shopping-Listen, die mit dem Benutzer geteilt werden
+  final sharedWithQuery = FirebaseFirestore.instance
+      .collection('shoppinglist')
+      .where('sharedwith', arrayContains: uid)
+      .withConverter<Shoppinglist>(
+        fromFirestore: Shoppinglist.fromFirestore,
+        toFirestore: (Shoppinglist s, _) => s.toFirestore(),
+      )
+      .snapshots();
+
+      sharedWithQuery.listen((snapshot) {
+    print('SharedWithQuery:');
+    for (var doc in snapshot.docs) {
+      print('ID: ${doc.id}, Data: ${doc.data()}');
+    }
+  });
+
+  // Die Shopping-Listen, die der Benutzer besitzt
+  final ownedQuery = FirebaseFirestore.instance
+      .collection('shoppinglist')
+      .where('userid', isEqualTo: uid)
+      .withConverter<Shoppinglist>(
+        fromFirestore: Shoppinglist.fromFirestore,
+        toFirestore: (Shoppinglist s, _) => s.toFirestore(),
+      )
+      .snapshots();
+
+    ownedQuery.listen((snapshot) {
+    print('OwnedQuery:');
+    for (var doc in snapshot.docs) {
+      print('ID: ${doc.id}, Data: ${doc.data()}');
+    }
+  });
+
+  // Kombiniere beide Streams
+  return Rx.merge([sharedWithQuery, ownedQuery]);
+}
+
 
   Stream<QuerySnapshot<Article>> articleStream(String uid) {
     print("uid");
