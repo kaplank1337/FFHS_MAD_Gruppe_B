@@ -1,4 +1,5 @@
 import 'package:einkaufslite/services/auth.dart';
+import 'package:einkaufslite/widgets/app_background.dart';
 import 'package:flutter/material.dart';
 
 class Authenticate extends StatefulWidget {
@@ -10,8 +11,7 @@ class Authenticate extends StatefulWidget {
 
 class _AuthenticateState extends State<Authenticate> {
   final AuthService _auth = AuthService();
-
-  GlobalKey<FormState> _loginFormKey = GlobalKey();
+  final GlobalKey<FormState> _loginFormKey = GlobalKey();
 
   String emailAddress = "";
   String password = "";
@@ -19,107 +19,112 @@ class _AuthenticateState extends State<Authenticate> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(centerTitle: true, title: Text("Einkauf App")),
-      body: SafeArea(child: _buildBody()),
-    );
-  }
-
-  Widget _buildBody() {
-    return SizedBox(
-      width: MediaQuery.sizeOf(context).width,
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [_buildTitle(), _buildLoginForm()],
-      ),
-    );
-  }
-
-  Widget _buildTitle() {
-    return const Text(
-      "Login",
-      style: TextStyle(fontSize: 35, fontWeight: FontWeight.w300),
-    );
-  }
-
-  Widget _buildLoginForm() {
-    return SizedBox(
-      width: MediaQuery.sizeOf(context).width * 0.90,
-      height: MediaQuery.sizeOf(context).height * 0.30,
-      child: Form(
-        key: _loginFormKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            TextFormField(
-              initialValue: "te@te.ch",
-              validator: (value) => value!.isEmpty ? "Enter an email" : null,
-              onSaved: (value) {
-                setState(() {
-                  emailAddress = value!;
-                });
-              },
-              decoration: InputDecoration(hintText: "E-Mail"),
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 36),
+              child: Form(
+                key: _loginFormKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Einkauf App",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white70,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    const Text(
+                      "Login",
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    TextFormField(
+                      initialValue: "te@te.ch",
+                      decoration: InputDecoration(
+                        labelText: "E-Mail",
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? "Enter an email" : null,
+                      onSaved: (value) => emailAddress = value!,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      initialValue: "test12",
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: "Password",
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      validator: (value) => value!.length < 6
+                          ? "Password must be at least 6 characters"
+                          : null,
+                      onSaved: (value) => password = value!,
+                    ),
+                    const SizedBox(height: 32),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.blue.shade700,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 32),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _handleLogin,
+                      child: const Text("Login"),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/register');
+                      },
+                      child: const Text(
+                        "Sign up",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            TextFormField(
-              initialValue: "test12",
-              validator:
-                  (value) =>
-                      value!.isEmpty ? "Enter a password 6+ chars long" : null,
-              onSaved: (value) {
-                setState(() {
-                  password = value!;
-                });
-              },
-              obscureText: true,
-
-              decoration: InputDecoration(hintText: "Password"),
-            ),
-            _builLoginButton(),
-            _buildRegisterButton(),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _builLoginButton() {
-    return SizedBox(
-      width: MediaQuery.sizeOf(context).width * 0.60,
-      child: ElevatedButton(
-        onPressed: () async {
-          if (_loginFormKey.currentState!.validate()) {
-            _loginFormKey.currentState!.save();
-
-            var user = await _auth.signInWithEmailAndPassword(
-              emailAddress,
-              password,
-            );
-
-            if (user != null) {
-              Navigator.pushNamed(context, '/home');
-            } else {
-              // Anmeldung fehlgeschlagen ->Feedback anzeigen
-            }
-          }
-        },
-        child: const Text("Login"),
-      ),
-    );
-  }
-
-  Widget _buildRegisterButton() {
-    return SizedBox(
-      width: MediaQuery.sizeOf(context).width * 0.60,
-      child: ElevatedButton(
-        onPressed: () async {
-          Navigator.pushNamed(context, '/register');
-        },
-        child: const Text("Sign up"),
-      ),
-    );
+  void _handleLogin() async {
+    if (_loginFormKey.currentState!.validate()) {
+      _loginFormKey.currentState!.save();
+      final user =
+          await _auth.signInWithEmailAndPassword(emailAddress, password);
+      if (user != null) {
+        Navigator.pushNamed(context, '/home');
+      }
+    }
   }
 }
