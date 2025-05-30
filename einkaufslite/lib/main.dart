@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        themeMode: ThemeMode.system,
+        themeMode: ThemeMode.light,
 
         initialRoute: '/',
         routes: {

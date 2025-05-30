@@ -12,11 +12,22 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton(
-        onPressed: onPressed,
-        child: Text(label),
+    return Align(
+      alignment: Alignment.center, 
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32.0), 
+        child: FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.blue.shade700,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          onPressed: onPressed,
+          child: Text(label),
+        ),
       ),
     );
   }
