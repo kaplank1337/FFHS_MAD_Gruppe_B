@@ -2,7 +2,7 @@ import 'package:einkaufslite/services/auth.dart';
 import 'package:einkaufslite/widgets/app_background.dart';
 import 'package:einkaufslite/widgets/app_button.dart';
 import 'package:einkaufslite/widgets/app_title.dart';
-import 'package:einkaufslite/widgets/app_text_field.dart'; // <--- Wichtig
+import 'package:einkaufslite/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 
 class Authenticate extends StatefulWidget {
@@ -32,62 +32,11 @@ class _AuthenticateState extends State<Authenticate> {
                 child: Center(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 36),
-                    child: Form(
-                      key: _loginFormKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Login",
-                            style: TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          /// E-Mail Feld
-                          AppTextField(
-                            hint: "E-Mail",
-                            initialValue: "te@te.ch",
-                            validator: (value) =>
-                                value!.isEmpty ? "Enter an email" : null,
-                            onSaved: (value) => emailAddress = value!,
-                          ),
-                          const SizedBox(height: 16),
-
-                          /// Passwort-Feld
-                          AppTextField(
-                            hint: "Password",
-                            obscureText: true,
-                            initialValue: "test12",
-                            validator: (value) => value!.length < 6
-                                ? "Password must be at least 6 characters"
-                                : null,
-                            onSaved: (value) => password = value!,
-                          ),
-                          const SizedBox(height: 32),
-
-                          /// Login Button
-                          AppButton(
-                            label: "Login",
-                            onPressed: _handleLogin,
-                          ),
-                          const SizedBox(height: 12),
-
-                          /// Sign up
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/register');
-                            },
-                            child: const Text(
-                              "Sign up",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: _LoginForm(
+                      formKey: _loginFormKey,
+                      onEmailSaved: (value) => emailAddress = value!,
+                      onPasswordSaved: (value) => password = value!,
+                      onSubmit: _handleLogin,
                     ),
                   ),
                 ),
@@ -107,5 +56,71 @@ class _AuthenticateState extends State<Authenticate> {
         Navigator.pushNamed(context, '/home');
       }
     }
+  }
+}
+
+class _LoginForm extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final FormFieldSetter<String> onEmailSaved;
+  final FormFieldSetter<String> onPasswordSaved;
+  final VoidCallback onSubmit;
+
+  const _LoginForm({
+    required this.formKey,
+    required this.onEmailSaved,
+    required this.onPasswordSaved,
+    required this.onSubmit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text(
+            "Login",
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 32),
+          AppTextField(
+            hint: "E-Mail",
+            initialValue: "te@te.ch",
+            validator: (value) =>
+                value!.isEmpty ? "Enter an email" : null,
+            onSaved: onEmailSaved,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            hint: "Password",
+            obscureText: true,
+            initialValue: "test12",
+            validator: (value) =>
+                value!.length < 6 ? "Password must be at least 6 characters" : null,
+            onSaved: onPasswordSaved,
+          ),
+          const SizedBox(height: 32),
+          AppButton(
+            label: "Login",
+            onPressed: onSubmit,
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/register');
+            },
+            child: const Text(
+              "Sign up",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:einkaufslite/widgets/app_background.dart';
+import 'package:einkaufslite/utils/logger.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -134,7 +135,7 @@ class _HomeState extends State<Home> {
                                         .updateShoppingListName(uid, newName);
                                     Navigator.of(context).pop();
                                   } catch (e) {
-                                    print('Fehler beim Umbenennen: $e');
+                                    log.w('Fehler beim Umbenennen: $e');
                                   }
                                 }
                               },
@@ -147,7 +148,7 @@ class _HomeState extends State<Home> {
                                       .deleteShoppingList(uid);
                                   Navigator.of(context).pop();
                                 } catch (e) {
-                                  print('Fehler beim Löschen: $e');
+                                  log.w('Fehler beim Löschen: $e');
                                 }
                               },
                               child: const Text(
@@ -207,12 +208,12 @@ class _HomeState extends State<Home> {
                     await DatabaseService(uid: user.uid)
                         .createShoppingList(listName);
                     Navigator.of(context).pop();
-                    print('Einkaufsliste gespeichert');
+                    log.i('Einkaufsliste gespeichert');
                   } catch (e) {
-                    print('Fehler beim Speichern der Einkaufsliste: $e');
+                    log.w('Fehler beim Speichern der Einkaufsliste: $e');
                   }
                 } else {
-                  print(
+                  log.w(
                       'Name der Einkaufsliste darf nicht leer sein oder Benutzer ist nicht angemeldet!');
                 }
               },

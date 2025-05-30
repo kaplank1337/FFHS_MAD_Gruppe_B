@@ -2,6 +2,8 @@ import 'package:einkaufslite/models/article.dart';
 import 'package:einkaufslite/services/database.dart';
 import 'package:einkaufslite/widgets/app_background.dart';
 import 'package:flutter/material.dart';
+import 'package:einkaufslite/utils/logger.dart';
+
 
 class EditArticleScreen extends StatefulWidget {
   final String listId;
@@ -53,7 +55,7 @@ class _EditArticleScreenState extends State<EditArticleScreen> {
       );
       Navigator.of(context).pop();
     } catch (e) {
-      print('Fehler beim Aktualisieren: $e');
+      log.w('Fehler beim Aktualisieren: $e');
     }
   }
 
