@@ -1,6 +1,7 @@
 import 'package:einkaufslite/models/user.dart';
 import 'package:einkaufslite/services/database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:einkaufslite/utils/logger.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -28,13 +29,13 @@ class AuthService {
       return credential.user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
+        log.w('No user found for that email.');
       } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+        log.w('Wrong password provided for that user.');
       }
-      return null; // <- wichtig!
+      return null;
     } catch (e) {
-      print(e.toString());
+      log.e(e.toString());
       return null;
     }
   }
@@ -45,7 +46,7 @@ class AuthService {
     String password,
   ) async {
     try {
-      print(emailAddress);
+      log.i(emailAddress);
       final credential = await _auth.createUserWithEmailAndPassword(
         email: emailAddress,
         password: password,
@@ -56,12 +57,12 @@ class AuthService {
       return _userFromFirebaseUser(user);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
+        log.i('The password provided is too weak.');
       } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
+        log.i('The account already exists for that email.');
       }
     } catch (e) {
-      print(e);
+      log.e(e);
     }
   }
 
@@ -70,7 +71,7 @@ class AuthService {
     try {
       return await _auth.signOut();
     } catch (e) {
-      print(e.toString());
+      log.e(e.toString());
       return null;
     }
   }

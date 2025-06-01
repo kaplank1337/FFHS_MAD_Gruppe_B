@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:einkaufslite/models/article.dart';
 import 'package:einkaufslite/models/shoppinglist.dart';
 import 'package:rxdart/rxdart.dart';
-
+import 'package:einkaufslite/utils/logger.dart';
 
 class DatabaseService {
   // user uid von authentication
@@ -53,9 +53,9 @@ class DatabaseService {
       .snapshots();
 
       sharedWithQuery.listen((snapshot) {
-    print('SharedWithQuery:');
+    log.i('SharedWithQuery:');
     for (var doc in snapshot.docs) {
-      print('ID: ${doc.id}, Data: ${doc.data()}');
+      log.i('ID: ${doc.id}, Data: ${doc.data()}');
     }
   });
 
@@ -70,9 +70,9 @@ class DatabaseService {
       .snapshots();
 
     ownedQuery.listen((snapshot) {
-    print('OwnedQuery:');
+    log.i('OwnedQuery:');
     for (var doc in snapshot.docs) {
-      print('ID: ${doc.id}, Data: ${doc.data()}');
+      log.i('ID: ${doc.id}, Data: ${doc.data()}');
     }
   });
 
@@ -82,8 +82,6 @@ class DatabaseService {
 
 
   Stream<QuerySnapshot<Article>> articleStream(String uid) {
-    print("uid");
-    print(uid);
     return FirebaseFirestore.instance
         .collection('shoppinglist')
         .doc(uid)
@@ -104,7 +102,7 @@ class DatabaseService {
         'sharedWith': [uid],
       });
     } catch (e) {
-      print('Fehler beim Erstellen der Einkaufsliste: $e');
+      log.w('Fehler beim Erstellen der Einkaufsliste: $e');
     }
   }
 
