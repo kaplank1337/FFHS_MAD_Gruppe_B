@@ -61,120 +61,120 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildSaleList() {
-    return StreamBuilder<QuerySnapshot<Shoppinglist>>(
-      stream: _databaseServices.saleStream(
-        FirebaseAuth.instance.currentUser!.uid,
-      ),
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<QuerySnapshot<Shoppinglist>> snapshot,
-      ) {
-        if (snapshot.hasError) {
-          return const Text('Etwas ist schiefgelaufen');
-        }
+  return StreamBuilder<List<MapEntry<String, Shoppinglist>>>(
+    stream: _databaseServices.saleStream(
+      FirebaseAuth.instance.currentUser!.uid,
+    ),
+    builder: (
+      BuildContext context,
+      AsyncSnapshot<List<MapEntry<String, Shoppinglist>>> snapshot,
+    ) {
+      if (snapshot.hasError) {
+        return const Text('Etwas ist schiefgelaufen');
+      }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-        final docs = snapshot.data!.docs;
+      final entries = snapshot.data!;
 
-        return ListView.builder(
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final doc = docs[index];
-            final shoppinglist = doc.data();
-            final uid = doc.id;
+      return ListView.builder(
+        itemCount: entries.length,
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          final docId = entry.key;
+          final shoppinglist = entry.value;
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6.0),
-              child: Card(
-                color: Colors.white.withOpacity(0.9),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: const Icon(Icons.shopping_cart, color: Colors.teal),
-                  title: Text(
-                    shoppinglist.name ?? 'Kein Name',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18,
-                    ),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6.0),
+            child: Card(
+              color: Colors.white.withOpacity(0.9),
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: const Icon(Icons.shopping_cart, color: Colors.teal),
+                title: Text(
+                  shoppinglist.name ?? 'Kein Name',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/sale', arguments: uid);
-                  },
-                  onLongPress: () {
-                    final _editController = TextEditingController(
-                      text: shoppinglist.name,
-                    );
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.pushNamed(context, '/sale', arguments: docId);
+                },
+                onLongPress: () {
+                  final _editController = TextEditingController(
+                    text: shoppinglist.name,
+                  );
 
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Einkaufsliste bearbeiten'),
-                          content: TextField(
-                            controller: _editController,
-                            decoration: const InputDecoration(
-                              labelText: 'Neuer Name',
-                            ),
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Einkaufsliste bearbeiten'),
+                        content: TextField(
+                          controller: _editController,
+                          decoration: const InputDecoration(
+                            labelText: 'Neuer Name',
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () async {
-                                final newName = _editController.text.trim();
-                                if (newName.isNotEmpty) {
-                                  try {
-                                    await _databaseServices
-                                        .updateShoppingListName(uid, newName);
-                                    Navigator.of(context).pop();
-                                  } catch (e) {
-                                    log.w('Fehler beim Umbenennen: $e');
-                                  }
-                                }
-                              },
-                              child: const Text('Speichern'),
-                            ),
-                            TextButton(
-                              onPressed: () async {
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () async {
+                              final newName = _editController.text.trim();
+                              if (newName.isNotEmpty) {
                                 try {
                                   await _databaseServices
-                                      .deleteShoppingList(uid);
+                                      .updateShoppingListName(docId, newName);
                                   Navigator.of(context).pop();
                                 } catch (e) {
-                                  log.w('Fehler beim Löschen: $e');
+                                  log.w('Fehler beim Umbenennen: $e');
                                 }
-                              },
-                              child: const Text(
-                                'Löschen',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
+                              }
+                            },
+                            child: const Text('Speichern'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              try {
+                                await _databaseServices
+                                    .deleteShoppingList(docId);
                                 Navigator.of(context).pop();
-                              },
-                              child: const Text('Abbrechen'),
+                              } catch (e) {
+                                log.w('Fehler beim Löschen: $e');
+                              }
+                            },
+                            child: const Text(
+                              'Löschen',
+                              style: TextStyle(color: Colors.red),
                             ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Abbrechen'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   void _buildTextInputDialog() {
     final _controller = TextEditingController();

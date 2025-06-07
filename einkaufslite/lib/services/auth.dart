@@ -1,5 +1,6 @@
 import 'package:einkaufslite/models/user.dart';
 import 'package:einkaufslite/services/database.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:einkaufslite/utils/logger.dart';
 
@@ -54,6 +55,13 @@ class AuthService {
 
       User? user = credential.user;
       await DatabaseService(uid: user!.uid).addUserData(emailAddress);
+
+      await FirebaseAnalytics.instance.logEvent(
+      name: 'user_registered',
+      parameters: {
+        'email': emailAddress,
+      },);
+
       return _userFromFirebaseUser(user);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {

@@ -1,85 +1,61 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:einkaufslite/models/article.dart';
 import 'package:einkaufslite/models/shoppinglist.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:einkaufslite/utils/logger.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+
 
 class DatabaseService {
-  // user uid von authentication
   final String? uid;
 
   DatabaseService({this.uid});
 
-  final CollectionReference userCollection = FirebaseFirestore.instance
-      .collection("users");
+  final CollectionReference userCollection =
+      FirebaseFirestore.instance.collection("users");
 
-  Future addUserData(String email) async {
+  Future<void> addUserData(String email) async {
     return await userCollection.doc(uid).set({"email": email});
   }
 
-  Future updateUserData(String email) async {
+  Future<void> updateUserData(String email) async {
     return await userCollection.doc(uid).set({"email": email});
   }
 
-  /*
-  // userData from snapshot
-  // userData from snapshot
-  UserData _userDataFromSnapshot(DocumentSnapshot snapshot) {
-    final data = snapshot.data() as Map<String, dynamic>;
+  Stream<List<MapEntry<String, Shoppinglist>>> saleStream(String uid) {
+    final sharedWithQuery = FirebaseFirestore.instance
+        .collection('shoppinglist')
+        .where('sharedWith', arrayContains: uid)
+        .withConverter<Shoppinglist>(
+          fromFirestore: Shoppinglist.fromFirestore,
+          toFirestore: (Shoppinglist s, _) => s.toFirestore(),
+        )
+        .snapshots();
 
-    return UserData(
-      uid: uid,
-      name: data["name"],
+    final ownedQuery = FirebaseFirestore.instance
+        .collection('shoppinglist')
+        .where('userId', isEqualTo: uid)
+        .withConverter<Shoppinglist>(
+          fromFirestore: Shoppinglist.fromFirestore,
+          toFirestore: (Shoppinglist s, _) => s.toFirestore(),
+        )
+        .snapshots();
+
+    return Rx.combineLatest2(
+      ownedQuery,
+      sharedWithQuery,
+      (
+        QuerySnapshot<Shoppinglist> owned,
+        QuerySnapshot<Shoppinglist> shared,
+      ) {
+        final allDocs = [...owned.docs, ...shared.docs];
+        final unique = {
+          for (var doc in allDocs) doc.id: doc.data(),
+        };
+        return unique.entries.toList();
+      },
     );
   }
-  */
-
-  /*
-  // get user doc stream
-  Stream<UserData> get userData {
-    return userCollection.doc(uid).snapshots().map(_userDataFromSnapshot);
-  }
-  */
-
-  Stream<QuerySnapshot<Shoppinglist>> saleStream(String uid) {
-  // Die Shopping-Listen, die mit dem Benutzer geteilt werden
-  final sharedWithQuery = FirebaseFirestore.instance
-      .collection('shoppinglist')
-      .where('sharedwith', arrayContains: uid)
-      .withConverter<Shoppinglist>(
-        fromFirestore: Shoppinglist.fromFirestore,
-        toFirestore: (Shoppinglist s, _) => s.toFirestore(),
-      )
-      .snapshots();
-
-      sharedWithQuery.listen((snapshot) {
-    log.i('SharedWithQuery:');
-    for (var doc in snapshot.docs) {
-      log.i('ID: ${doc.id}, Data: ${doc.data()}');
-    }
-  });
-
-  // Die Shopping-Listen, die der Benutzer besitzt
-  final ownedQuery = FirebaseFirestore.instance
-      .collection('shoppinglist')
-      .where('userid', isEqualTo: uid)
-      .withConverter<Shoppinglist>(
-        fromFirestore: Shoppinglist.fromFirestore,
-        toFirestore: (Shoppinglist s, _) => s.toFirestore(),
-      )
-      .snapshots();
-
-    ownedQuery.listen((snapshot) {
-    log.i('OwnedQuery:');
-    for (var doc in snapshot.docs) {
-      log.i('ID: ${doc.id}, Data: ${doc.data()}');
-    }
-  });
-
-  // Kombiniere beide Streams
-  return Rx.merge([sharedWithQuery, ownedQuery]);
-}
-
 
   Stream<QuerySnapshot<Article>> articleStream(String uid) {
     return FirebaseFirestore.instance
@@ -93,20 +69,28 @@ class DatabaseService {
         .snapshots();
   }
 
-  // Einkaufsliste erstellen
   Future<void> createShoppingList(String listName) async {
-    try {
-      await FirebaseFirestore.instance.collection('shoppinglist').add({
-        'name': listName,
-        'userId': uid,
-        'sharedWith': [uid],
-      });
-    } catch (e) {
-      log.w('Fehler beim Erstellen der Einkaufsliste: $e');
-    }
-  }
+  try {
+    final listRef = await FirebaseFirestore.instance.collection('shoppinglist').add({
+      'name': listName,
+      'userId': uid,
+      'sharedWith': [uid],
+    });
 
-  // Artikel erstellen
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'shopping_list_created',
+      parameters: {
+        'list_name': listName,
+        'user_id': uid ?? 'unknown_user',
+        'list_id': listRef.id,
+      },
+    );
+  } catch (e) {
+    log.w('Fehler beim Erstellen der Einkaufsliste: $e');
+  }
+}
+
+
   Future<void> createArticle(String listId, String name, String note) async {
     final docRef = FirebaseFirestore.instance
         .collection('shoppinglist')
@@ -114,6 +98,15 @@ class DatabaseService {
         .collection('article');
 
     await docRef.add({'name': name, 'note': note});
+
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'article_created',
+      parameters: {
+        'list_id': listId,
+        'name': name,
+        'user_id': uid ?? 'unknown_user',
+      },
+    );
   }
 
   Future<void> updateArticle(
@@ -153,6 +146,14 @@ class DatabaseService {
         .collection('shoppinglist')
         .doc(listId)
         .delete();
+
+    await FirebaseAnalytics.instance.logEvent(
+    name: 'shopping_list_deleted',
+    parameters: {
+      'list_id': listId,
+      'user_id': uid ?? 'unknown_user',
+    },
+    );
   }
 
   Future<void> updateArticleStatus(
@@ -168,21 +169,29 @@ class DatabaseService {
         .update({'salestatus': salestatus});
   }
 
-  Future<void> shareShoppingList(String listId, String email) async {
-    final docRef = FirebaseFirestore.instance
-        .collection('shoppinglist')
-        .doc(listId);
+  Future<void> shareShoppingList(String listId, String emailOrUid) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('shoppinglist').doc(listId);
 
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
       final data = snapshot.data() as Map<String, dynamic>;
 
-      List<dynamic> sharedWith = data['sharedwith'] ?? [];
+      List<dynamic> sharedWith = data['sharedWith'] ?? [];
 
-      if (!sharedWith.contains(email)) {
-        sharedWith.add(email);
-        transaction.update(docRef, {'sharedwith': sharedWith});
+      if (!sharedWith.contains(emailOrUid)) {
+        sharedWith.add(emailOrUid);
+        transaction.update(docRef, {'sharedWith': sharedWith});
       }
     });
+
+  await FirebaseAnalytics.instance.logEvent(
+  name: 'shopping_list_shared',
+  parameters: {
+    'list_id': listId,
+    'shared_with': emailOrUid,
+    'user_id': uid ?? 'unknown_user',
+  },
+  );
   }
 }
