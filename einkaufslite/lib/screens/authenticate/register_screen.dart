@@ -1,9 +1,11 @@
 import 'package:einkaufslite/services/auth.dart';
+import 'package:einkaufslite/services/database.dart';
 import 'package:einkaufslite/widgets/app_background.dart';
 import 'package:einkaufslite/widgets/app_button.dart';
 import 'package:einkaufslite/widgets/app_text_field.dart';
 import 'package:einkaufslite/widgets/app_title.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -48,12 +50,50 @@ class _RegisterState extends State<Register> {
     );
   }
 
-  Future<void> _handleRegister() async {
+   Future<void> _handleRegister() async {
     if (_registerFormKey.currentState!.validate()) {
       _registerFormKey.currentState!.save();
-      await _auth.registerWithEmailAndPassword(emailAddress, password);
-      Navigator.pushNamed(context, '/home');
+
+      try {
+        final user = await _auth.registerWithEmailAndPassword(emailAddress, password);
+
+        if (user != null) {
+          final dbService = DatabaseService(uid: user.uid);
+          final success = await dbService.addUserDataIfNotExists(emailAddress);
+
+          if (!success) {
+            _showErrorDialog("Benutzer ist bereits in der Datenbank vorhanden.");
+            return;
+          }
+
+          Navigator.pushNamed(context, '/home');
+        }
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          _showErrorDialog("Ein Benutzer mit dieser E-Mail existiert bereits.");
+        } else {
+          _showErrorDialog("Registrierung fehlgeschlagen: ${e.message}");
+        }
+      } catch (e) {
+        _showErrorDialog("Ein unbekannter Fehler ist aufgetreten.");
+      }
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Fehler"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -88,17 +128,26 @@ class _RegisterForm extends StatelessWidget {
           const SizedBox(height: 32),
           AppTextField(
             hint: "E-Mail",
-            validator: (value) =>
-                value!.isEmpty ? "Bitte gib eine E-Mail an" : null,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "Bitte gib eine E-Mail an";
+              }
+              final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+              if (!emailRegex.hasMatch(value)) {
+                return "Ungültige E-Mail-Adresse";
+              }
+              return null;
+            },
             onSaved: onEmailSaved,
           ),
           const SizedBox(height: 16),
           AppTextField(
             hint: "Passwort",
             obscureText: true,
-            validator: (value) => value!.length < 6
-                ? "Passwort muss mindestens 6 Zeichen haben"
-                : null,
+            validator: (value) =>
+                value == null || value.length < 6
+                    ? "Passwort muss mindestens 6 Zeichen haben"
+                    : null,
             onSaved: onPasswordSaved,
           ),
           const SizedBox(height: 32),

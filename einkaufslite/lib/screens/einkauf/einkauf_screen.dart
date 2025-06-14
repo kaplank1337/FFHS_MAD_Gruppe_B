@@ -145,7 +145,7 @@ class _EinkaufScreenState extends State<EinkaufScreen> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Abbrechen'),
           ),
-          TextButton(
+         TextButton(
             onPressed: () async {
               final email = _emailController.text.trim();
               if (email.isNotEmpty) {
@@ -156,12 +156,12 @@ class _EinkaufScreenState extends State<EinkaufScreen> {
                       .get();
 
                   if (querySnapshot.docs.isNotEmpty) {
-                    await FirebaseFirestore.instance
-                        .collection('shoppinglist')
-                        .doc(widget.uid)
-                        .update({
-                      'sharedwith': FieldValue.arrayUnion([email]),
-                    });
+                    // Hole die UID anhand der E-Mail
+                    final sharedUid = querySnapshot.docs.first.id;
+
+                    // Rufe die Methode aus dem DatabaseService auf
+                    await _databaseServices.shareShoppingList(widget.uid, sharedUid);
+
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -179,8 +179,7 @@ class _EinkaufScreenState extends State<EinkaufScreen> {
                   log.e('Fehler beim Teilen: $e');
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content:
-                          Text('Fehler beim Teilen der Einkaufsliste.'),
+                      content: Text('Fehler beim Teilen der Einkaufsliste.'),
                     ),
                   );
                 }

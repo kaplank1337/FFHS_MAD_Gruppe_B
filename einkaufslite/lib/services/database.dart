@@ -14,9 +14,17 @@ class DatabaseService {
   final CollectionReference userCollection =
       FirebaseFirestore.instance.collection("users");
 
-  Future<void> addUserData(String email) async {
-    return await userCollection.doc(uid).set({"email": email});
+  Future<bool> addUserDataIfNotExists(String email) async {
+  final docSnapshot = await userCollection.doc(uid).get();
+
+  if (docSnapshot.exists) {
+    return false;
   }
+
+  await userCollection.doc(uid).set({"email": email});
+  return true;
+}
+
 
   Future<void> updateUserData(String email) async {
     return await userCollection.doc(uid).set({"email": email});
@@ -193,5 +201,5 @@ class DatabaseService {
     'user_id': uid ?? 'unknown_user',
   },
   );
-  }
+}
 }
