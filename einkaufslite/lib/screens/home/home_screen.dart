@@ -18,9 +18,15 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final DatabaseService _databaseServices = DatabaseService();
 
-  @override
-  Widget build(BuildContext context) {
-    return AppBackground(
+ @override
+Widget build(BuildContext context) {
+  // ignore: deprecated_member_use
+  return WillPopScope(
+    onWillPop: () async {
+      Navigator.pushReplacementNamed(context, '/login');
+      return false;
+    },
+    child: AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -35,8 +41,9 @@ class _HomeState extends State<Home> {
           child: const Icon(Icons.add),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildBody() {
     return Padding(

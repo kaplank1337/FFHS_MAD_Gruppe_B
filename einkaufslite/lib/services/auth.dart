@@ -54,7 +54,7 @@ class AuthService {
       );
 
       User? user = credential.user;
-      await DatabaseService(uid: user!.uid).addUserData(emailAddress);
+      await DatabaseService(uid: user!.uid).addUserDataIfNotExists(emailAddress);
 
       await FirebaseAnalytics.instance.logEvent(
       name: 'user_registered',
@@ -64,12 +64,11 @@ class AuthService {
 
       return _userFromFirebaseUser(user);
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        log.i('The password provided is too weak.');
-      } else if (e.code == 'email-already-in-use') {
-        log.i('The account already exists for that email.');
-      }
-    } catch (e) {
+      // Log optional behalten
+      log.w('FirebaseAuthException: ${e.code} - ${e.message}');
+      rethrow; // Exception weitergeben an aufrufenden Code
+    }
+    catch (e) {
       log.e(e);
     }
   }
