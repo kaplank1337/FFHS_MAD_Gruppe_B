@@ -59,12 +59,7 @@ class _RegisterState extends State<Register> {
 
         if (user != null) {
           final dbService = DatabaseService(uid: user.uid);
-          final success = await dbService.addUserDataIfNotExists(emailAddress);
-
-          if (!success) {
-            _showErrorDialog("Benutzer ist bereits in der Datenbank vorhanden.");
-            return;
-          }
+          await dbService.addUserDataIfNotExists(emailAddress);
 
           Navigator.pushNamed(context, '/home');
         }
